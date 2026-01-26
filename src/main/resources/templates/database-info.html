@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Управление базой данных</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+              background-image: url('/images/database.jpg'); /* ваш фон */
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .db-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 50px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .connection-card {
+            background-color: #f8f9fa;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .btn-db {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-db:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .sql-example {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .table-stats {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);">
+    <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-database"></i> Управление базой данных
+            </span>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/add">Добавить книгу</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/database">Управление БД</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="${h2ConsoleUrl}" target="_blank">H2 Console</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="db-container">
+        <h1 class="mb-4 text-center">
+            <i class="bi bi-database-fill"></i> Панель управления базой данных
+        </h1>
+
+        <!-- Карточка с информацией -->
+        <div class="info-card">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3><i class="bi bi-info-circle"></i> Информация о базе данных</h3>
+                    <p class="mb-0">Встроенная база данных H2 используется для хранения информации о книгах.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-light text-primary fs-6 p-2">Версия: H2 2.1.214</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Параметры подключения -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h4 class="mb-3"><i class="bi bi-plug"></i> Параметры подключения</h4>
+                <div class="connection-card">
+                    <h6>JDBC URL</h6>
+                    <code class="text-primary" th:text="${dbUrl}"></code>
+                </div>
+                <div class="connection-card">
+                    <h6>Имя пользователя</h6>
+                    <code th:text="${dbUser}"></code>
+                </div>
+                <div class="connection-card">
+                    <h6>Пароль</h6>
+                    <code th:text="${dbPassword}"></code>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h4 class="mb-3"><i class="bi bi-lightning"></i> Быстрые действия</h4>
+                <div class="d-grid gap-3">
+                    <a th:href="${h2ConsoleUrl}" target="_blank" class="btn btn-success btn-db">
+                        <i class="bi bi-terminal"></i> Открыть H2 Console
+                    </a>
+                    <a href="/" class="btn btn-primary btn-db">
+                        <i class="bi bi-book"></i> К списку книг
+                    </a>
+                    <a href="/add" class="btn btn-warning btn-db">
+                        <i class="bi bi-plus-circle"></i> Добавить книгу
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Примеры SQL запросов -->
+        <div class="mb-4">
+            <h4><i class="bi bi-code-slash"></i> Примеры SQL-запросов</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="sql-example">
+                        <span style="color: #38bdf8">SELECT</span> * <span style="color: #38bdf8">FROM</span> books;<br>
+                        <span class="text-muted">-- Показать все книги</span>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="sql-example">
+                        <span style="color: #38bdf8">SELECT</span> COUNT(*) <span style="color: #38bdf8">FROM</span> books;<br>
+                        <span class="text-muted">-- Количество книг</span>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="sql-example">
+                        <span style="color: #38bdf8">SELECT</span> genre, <span style="color: #38bdf8">COUNT</span>(*) <span style="color: #38bdf8">FROM</span> books<br>
+                        <span style="color: #38bdf8">GROUP BY</span> genre;<br>
+                        <span class="text-muted">-- Книги по жанрам</span>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="sql-example">
+                        <span style="color: #38bdf8">INSERT INTO</span> books (title, author, genre, publication_year, copies)<br>
+                        <span style="color: #38bdf8">VALUES</span> ('Новая книга', 'Автор', 'Жанр', 2026, 5);<br>
+                        <span class="text-muted">-- Добавить книгу</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика (можно будет добавить реальную статистику позже) -->
+        <div class="mb-4">
+            <h4><i class="bi bi-graph-up"></i> Статистика базы данных</h4>
+            <div class="table-responsive table-stats">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Значение</th>
+                        <th>Описание</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><i class="bi bi-table"></i> Таблицы</td>
+                        <td><span class="badge bg-primary">1</span></td>
+                        <td>Основная таблица "books"</td>
+                    </tr>
+                    <tr>
+                        <td><i class="bi bi-hdd"></i> Тип БД</td>
+                        <td><span class="badge bg-info">In-Memory</span></td>
+                        <td>Данные хранятся в оперативной памяти</td>
+                    </tr>
+                    <tr>
+                        <td><i class="bi bi-clock"></i> Режим работы</td>
+                        <td><span class="badge bg-success">Разработка</span></td>
+                        <td>Используется для тестирования и разработки</td>
+                    </tr>
+                    <tr>
+                        <td><i class="bi bi-shield-check"></i> Доступ</td>
+                        <td><span class="badge bg-warning">Только локальный</span></td>
+                        <td>Консоль доступна только с localhost</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Предупреждения -->
+        <div class="alert alert-warning">
+            <h5><i class="bi bi-exclamation-triangle"></i> Важная информация</h5>
+            <ul class="mb-0">
+                <li>База данных H2 - <strong>in-memory</strong> (в оперативной памяти)</li>
+                <li>Данные <strong>исчезают</strong> при перезапуске приложения</li>
+                <li>Для продакшена используйте PostgreSQL, MySQL или другую постоянную БД</li>
+                <li>H2 Console предназначена <strong>только для разработки</strong></li>
+            </ul>
+        </div>
+
+        <!-- Ссылка на документацию -->
+        <div class="text-center mt-4">
+            <a href="https://h2database.com/html/main.html" target="_blank" class="btn btn-outline-info">
+                <i class="bi bi-book"></i> Документация H2 Database
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

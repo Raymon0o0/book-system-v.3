@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book.title} + ' - Детальная информация'">Детальная информация о книге</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-image: url('/images/library.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Стили для карточек похожих книг */
+        .similar-book-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .similar-book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .similar-book-card .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.3;
+            height: 2.6em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .similar-book-card .card-subtitle {
+            font-size: 0.85rem;
+            height: 1.2em;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .similar-book-card .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+
+        .similar-book-card .btn {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+        }
+
+        .book-details-container {
+            background-color: rgba(255, 255, 255, 0.97);
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .book-cover {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 20px; /* Уменьшено с 30px */
+            text-align: center;
+            height: auto; /* Изменено с height: 100% */
+            min-height: 280px; /* Добавлено */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        ..book-cover-icon {
+            font-size: 4rem; /* Уменьшено с 5rem */
+            color: #2c3e50;
+            margin-bottom: 15px; /* Уменьшено с 20px */
+        }
+
+        .book-cover h4 {
+            font-size: 1.5rem; /* Уменьшите размер шкапа при необходимости */
+            margin-bottom: 8px;
+        }
+
+        .book-cover .text-muted {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .book-info-card {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .author-info {
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .badge-custom {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 2px;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .book-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px; /* Уменьшено с 15px */
+            margin-top: 15px; /* Уменьшено с 20px */
+        }
+
+        .meta-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px 12px; /* Уменьшено с 15px */
+            flex: 1;
+            min-width: 140px; /* Уменьшено с 150px */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .meta-label {
+            font-size: 0.85rem; /* Уменьшено с 0.9rem */
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        .meta-value {
+            font-size: 1.1rem; /* Уменьшено с 1.2rem */
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .mt-4 {
+            margin-top: 1rem !important; /* Уменьшено с 1.5rem */
+        }
+
+        .col-md-8 {
+            min-height: 400px;
+        }
+
+    </style>
+</head>
+<body>
+<!-- Навигация -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-book me-2"></i> Библиотечная система
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/">Главная</a>
+            <a class="nav-link" href="/add">Добавить книгу</a>
+            <a class="nav-link" href="/stats">Статистика</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Детальная информация о книге -->
+<div class="container">
+    <div class="book-details-container">
+        <!-- Кнопка назад -->
+        <a href="/" class="btn btn-back mb-4">
+            <i class="bi bi-arrow-left me-2"></i> Назад к каталогу
+        </a>
+
+        <div class="row">
+            <!-- Левая колонка - обложка и основная информация -->
+            <div class="col-md-4 mb-4">
+                <div class="book-cover">
+                    <i class="bi bi-book book-cover-icon"></i>
+                    <h4 th:text="${book.title}">Название книги</h4>
+                    <p class="text-muted" th:text="${book.author}">Автор</p>
+
+                    <div class="mt-3">
+                        <span class="badge badge-custom bg-primary" th:text="${book.genre}">Жанр</span>
+                        <span class="badge badge-custom bg-secondary" th:text="${book.publicationYear}">Год</span>
+                        <span class="badge badge-custom bg-success" th:text="${book.copies} + ' доступно'">Копии</span>
+                    </div>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="book-meta">
+                    <div class="meta-item" th:if="${book.pages}">
+                        <div class="meta-label">Страниц</div>
+                        <div class="meta-value" th:text="${book.pages}">0</div>
+                    </div>
+                    <div class="meta-item" th:if="${book.isbn}">
+                        <div class="meta-label">ISBN</div>
+                        <div class="meta-value" th:text="${book.isbn}">-</div>
+                    </div>
+                    <div class="meta-item" th:if="${book.publisher}">
+                        <div class="meta-label">Издательство</div>
+                        <div class="meta-value" th:text="${book.publisher}">-</div>
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="mt-4">
+                    <a th:href="@{/edit/{id}(id=${book.id})}" class="btn btn-warning w-100 mb-2">
+                        <i class="bi bi-pencil me-2"></i> Редактировать книгу
+                    </a>
+                    <a th:href="@{/delete/{id}(id=${book.id})}"
+                       class="btn btn-danger w-100"
+                       onclick="return confirm('Вы уверены, что хотите удалить книгу?')">
+                        <i class="bi bi-trash me-2"></i> Удалить книгу
+                    </a>
+                </div>
+            </div>
+
+            <!-- Правая колонка - описание и дополнительная информация -->
+            <div class="col-md-8">
+                <div class="col-md-8 right-column">
+                <!-- Описание книги -->
+                <div class="book-info-card">
+                    <h4 class="mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i> Описание книги
+                    </h4>
+                    <p class="lead" th:text="${book.description}">
+                        Описание книги будет добавлено позже.
+                    </p>
+                </div>
+
+                <!-- Информация об авторе -->
+                <div class="author-info">
+                    <h4 class="mb-3">
+                        <i class="bi bi-person-badge text-success me-2"></i> Об авторе
+                    </h4>
+                    <p th:text="${book.authorBio}">
+                        Информация об авторе будет добавлена в ближайшее время.
+                    </p>
+                </div>
+
+                <!-- Библиографическая информация -->
+                <div class="book-info-card mt-4 mb-5"> <!-- Добавлен mb-5 -->
+                    <h4 class="mb-3">
+                        <i class="bi bi-card-checklist text-info me-2"></i> Библиографические данные
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID в каталоге:</strong> <span th:text="${book.id}">-</span></p>
+                            <p><strong>Название:</strong> <span th:text="${book.title}">-</span></p>
+                            <p><strong>Автор:</strong> <span th:text="${book.author}">-</span></p>
+                            <p><strong>Жанр:</strong> <span class="badge bg-primary" th:text="${book.genre}">-</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Год издания:</strong> <span th:text="${book.publicationYear}">-</span></p>
+                            <p><strong>Доступно копий:</strong>
+                                <span th:class="${book.copies > 0} ? 'badge bg-success' : 'badge bg-danger'"
+                                      th:text="${book.copies} + ' шт.'">
+                </span>
+                            </p>
+                            <p><strong>Статус:</strong>
+                                <span th:if="${book.copies > 0}" class="badge bg-success">Доступна</span>
+                                <span th:if="${book.copies == 0}" class="badge bg-danger">Нет в наличии</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Системная информация -->
+                <div class="alert alert-light mt-4 mb-5"> <!-- Добавлен mb-5 -->
+                    <h6><i class="bi bi-gear me-2"></i> Системная информация</h6>
+                    <p class="mb-0 small text-muted">
+                        Книга добавлена в электронный каталог библиотеки.
+                        Для получения физической копии обратитесь к библиотекарю.
+                    </p>
+                </div>
+
+                    <!-- Похожие книги -->
+                    <div class="mt-5 pt-3 border-top">
+                        <h4><i class="bi bi-bookshelf text-primary me-2"></i> Похожие книги</h4>
+
+                        <div th:if="${similarBooks != null and !similarBooks.isEmpty()}">
+                            <div class="row">
+                                <div th:each="similarBook : ${similarBooks}" class="col-md-4 mb-3">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <a th:href="@{/book/{id}(id=${similarBook.id})}"
+                                                   class="text-decoration-none text-dark">
+                                                    <span th:text="${similarBook.title}">Название</span>
+                                                </a>
+                                            </h6>
+                                            <p class="card-subtitle mb-2 text-muted small"
+                                               th:text="${similarBook.author}">Автор</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-secondary"
+                                  th:text="${similarBook.genre}">Жанр</span>
+                                                <span class="badge bg-light text-dark border"
+                                                      th:text="${similarBook.publicationYear}">Год</span>
+                                                <span th:if="${similarBook.copies > 0}"
+                                                      class="badge bg-success"
+                                                      th:text="${similarBook.copies} + ' шт.'">Копии</span>
+                                                <span th:if="${similarBook.copies == 0}"
+                                                      class="badge bg-danger">Нет в наличии</span>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent border-top-0">
+                                            <a th:href="@{/book/{id}(id=${similarBook.id})}"
+                                               class="btn btn-outline-primary btn-sm w-100">
+                                                <i class="bi bi-eye"></i> Подробнее
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${similarBooks == null or similarBooks.isEmpty()}">
+                            <div class="alert alert-info">
+                                <p class="mb-0">
+                                    К сожалению, похожих книг не найдено.
+                                    <a href="/" class="alert-link">Посмотрите другие книги в каталоге</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Автоматическое форматирование текста описания
+    document.addEventListener('DOMContentLoaded', function() {
+        // Добавляем отступы между абзацами в описании
+        const description = document.querySelector('.lead');
+        if (description) {
+            description.innerHTML = description.innerHTML.replace(/\n/g, '<br><br>');
+        }
+
+        // Подсветка текущей страницы в навигации
+        const currentPage = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>
